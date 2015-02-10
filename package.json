@@ -1,0 +1,32 @@
+{
+  "name": "picture-sorter",
+  "version": "0.0.1",
+  "description": "Organize your photo collection based on exif data",
+  "main": "index.js",
+  "dependencies": {
+    "exif": "0.4.0",
+    "fs-extra": "0.16.3"
+  },
+  "bin": {
+    "picture-sorter": "./picture-sorter"
+  },
+  "keywords": [
+    "picture",
+    "exif",
+    "photo"
+  ],
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Javier G. Scappini",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jscappini/picture-sorter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jscappini/picture-sorter/issues"
+  },
+  "homepage": "https://github.com/jscappini/picture-sorter"
+}

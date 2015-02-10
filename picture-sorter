@@ -1,0 +1,17 @@
+#!/usr/bin/env node
+var pictureSorter = require("./index.js")
+var fs = require("fs")
+
+var source = process.argv[2]
+if (!source) {
+  var errorMsg = "Usage: picture-saver source destination option";
+  return console.log(errorMsg);
+}
+
+var destination = process.argv[3] || './dest'
+
+if (fs.existsSync(destination)) {
+  pictureSorter(source, destination, process.argv[4]);
+} else {
+  console.log("Source directory not found.");
+}
