@@ -1,6 +1,6 @@
 # Picture Sorter
 
-Sort your photos based on their EXIF information. Heavily inpired on [photo-saver](https://github.com/montanaflynn/photo-saver)
+Sort your photos based on their EXIF information. Heavily inspired on [photo-saver](https://github.com/montanaflynn/photo-saver)
 
 ## Usage
 The main app takes 3 args: *source* folder, *destination* folder and *options*. The currently supported option is just **--move**, which deletes the processed picture after copying it to the destination folder.
