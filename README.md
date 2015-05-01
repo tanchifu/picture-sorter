@@ -3,12 +3,20 @@
 Sort your photos based on their EXIF information. Heavily inspired on [photo-saver](https://github.com/montanaflynn/photo-saver)
 
 ## Usage
-The main app takes 3 args: *source* folder, *destination* folder and *options*. The currently supported option is just **--move**, which deletes the processed picture after copying it to the destination folder.
+The main app takes these args:
+
+  * ```-s <SOURCE>``` source folder
+  * ```-d <DEST>``` destination folder
+  * ```-m``` move files after processing
+  * ```-v``` use verbose mode
+  * ```--use-modif-date``` use modification date from file if getting Exif info fails
+
+
 
 Ex.:
 
 ```bash
-$ ./picture-sorter /path/to/source/folder /path/to/destination/folder --move
+$ ./picture-sorter -m -v -s /path/to/source/folder -d /path/to/destination/folder
 ```
 
 Output structure:

@@ -1,17 +1,25 @@
 #!/usr/bin/env node
-var pictureSorter = require("./index.js")
-var fs = require("fs")
+var pictureSorter = require("./index.js");
+var fs = require("fs");
+var argv = require("minimist")(process.argv);
+var src = argv['s'] !== undefined;
+var dst = argv['d'] !== undefined;
 
-var source = process.argv[2]
-if (!source) {
-  var errorMsg = "Usage: picture-sorter source destination option";
-  return console.log(errorMsg);
+if (!(src && dst)) {
+  console.log("");
+  console.log("Usage: picture-sorter options");
+  console.log("");
+  console.log("   Ex: picture-sorter -m --use-modif-date -s ~/tmp -d ~/tmp/sorted");
+  console.log("");
+  console.log("Options:");
+  console.log("");
+  console.log("  -m - Move files from source.");
+  console.log("  -s - Source folder.");
+  console.log("  -d - Destionation folder.");
+  console.log("  -v - Verbose mode.");
+  console.log("  --use-modif-date - If no exif info is found, use file modification date instead.");
+  console.log("");
+  return false;
 }
 
-var destination = process.argv[3] || './dest'
-
-if (fs.existsSync(destination)) {
-  pictureSorter(source, destination, process.argv[4]);
-} else {
-  console.log("Source directory not found.");
-}
+pictureSorter(argv['s'], argv['d'], argv);

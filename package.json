@@ -1,11 +1,12 @@
 {
   "name": "picture-sorter",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "description": "Organize your photo collection based on exif data",
   "main": "index.js",
   "dependencies": {
     "exif": "0.4.0",
-    "fs-extra": "0.16.3"
+    "fs-extra": "0.16.3",
+    "minimist": "1.1.1"
   },
   "bin": {
     "picture-sorter": "./picture-sorter"
