@@ -1,5 +1,7 @@
 # Picture Sorter
 
+[![NPM](https://nodei.co/npm/picture-sorter.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/picture-sorter/)
+
 Sort your photos based on their EXIF information. Heavily inspired on [photo-saver](https://github.com/montanaflynn/photo-saver)
 
 ## Usage
