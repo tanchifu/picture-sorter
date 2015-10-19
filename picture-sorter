@@ -1,15 +1,24 @@
 #!/usr/bin/env node
 var pictureSorter = require("./index.js");
-var fs = require("fs");
+//var fs = require("fs");
 var argv = require("minimist")(process.argv);
 var src = argv['s'] !== undefined;
 var dst = argv['d'] !== undefined;
+var metaFile = argv['j'];
+var reportOnly = argv['report'];
 
-if (!(src && dst)) {
+if (!(src && (dst || reportOnly || metaFile))) {
   console.log("");
   console.log("Usage: picture-sorter options");
   console.log("");
-  console.log("   Ex: picture-sorter -m --use-modif-date -s ~/tmp -d ~/tmp/sorted");
+  console.log("   Ex 1: picture-sorter -m -s ~/tmp -d ~/tmp/sorted");
+  console.log("       This command line renames and moves the picture files to the destination folder.");
+  console.log("");
+  console.log("   Ex 2: picture-sorter -report -s ~/tmp");
+  console.log("       This command line does not change anything (hence no need for the -d argument,) it only reports the picture count by camera models and extension names.")
+  console.log("");
+  console.log("   Ex 3: picture-sorter -j meta.json -s ~/tmp");
+  console.log("       This command line does not change anything (hence no need for the -d argument, but requires -j file arguments) it writes all the picture/video file info to a file.")  
   console.log("");
   console.log("Options:");
   console.log("");
@@ -17,7 +26,9 @@ if (!(src && dst)) {
   console.log("  -s - Source folder.");
   console.log("  -d - Destionation folder.");
   console.log("  -v - Verbose mode.");
-  console.log("  --use-modif-date - If no exif info is found, use file modification date instead.");
+  console.log("  -j - output the meta info (in json format) of all the pictures/videos under the source folder to a file");
+  console.log("  --backup - copy files from Source to Destionation.");
+  console.log("  --report - report picture count by camera models and extension names");
   console.log("");
   return false;
 }
