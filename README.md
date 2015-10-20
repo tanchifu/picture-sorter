@@ -11,7 +11,9 @@ The main app takes these args:
   * ```-d <DEST>``` destination folder
   * ```-m``` move files after processing
   * ```-v``` use verbose mode
-  * ```--use-modif-date``` use modification date from file if getting Exif info fails
+  * ```-j <META-FILE>``` write the meta info of all the picture/video files under the source folder to the meta-file
+  * ```--backup``` copy the picture/video files from source to destination without renaming the files
+  * ```--report``` report the number of typed files by camera model and file extensions
 
 
 
@@ -28,15 +30,14 @@ $ tree /path/to/destination/folder
 .
 ├── 2005
 │   └── 04
-│       └── 19
-│           └── 04-19-2005.jpg
+│       └── 2005-04-19-12-20-30.jpg
+│           
 ├── 2006
 │   ├── 07
-│   │   └── 15
-│   │       ├── H020.jpg
-│   │       └── H034.jpg
+│   │    ├── 2006-07-12-15-30-21.jpg
+│   │    └── 2006-07-12-15-31-09.jpg
 │   └── 11
-│       ├── 06
+│        ├── 
 ...
 ```
 ## Disclaimer
