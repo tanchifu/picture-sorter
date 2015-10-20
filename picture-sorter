@@ -14,7 +14,7 @@ if (!(src && (dst || reportOnly || metaFile))) {
   console.log("   Ex 1: picture-sorter -m -s ~/tmp -d ~/tmp/sorted");
   console.log("       This command line renames and moves the picture files to the destination folder.");
   console.log("");
-  console.log("   Ex 2: picture-sorter -report -s ~/tmp");
+  console.log("   Ex 2: picture-sorter --report -s ~/tmp");
   console.log("       This command line does not change anything (hence no need for the -d argument,) it only reports the picture count by camera models and extension names.")
   console.log("");
   console.log("   Ex 3: picture-sorter -j meta.json -s ~/tmp");
