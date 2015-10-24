@@ -11,7 +11,7 @@
     // functions
     var copyOrMoveFile, pictureSorter, processFolder, processFileWithExif, processFile,
         renameFileWithDateWOExt, convert2Digits, findNextGoodName, backupFile, reportTally,
-        generateJson, onResults;
+        generateJson, onResults, findMostRecent;
 
     fs = require('fs-extra');
     path = require('path');
@@ -236,7 +236,7 @@
       3. all others should be cataloged by it's camera model name
      */
     reportTally = function(res, opt) {
-        var rec, prevRec, count;
+        var rec, prevRec, count, trec, modelArray = [];
         // calc total size
         count = 0;
         for (i=0; i<res.length; i++) {
@@ -273,16 +273,24 @@
                     prevRec = rec.model;
                 }
                 if (rec.model !== prevRec) {
-                    log(opt, "   Camera " + prevRec + " : " + (count-1));
+                    // time to sort the modelArray by time and find the most recent one
+                    trec = findMostRecent(modelArray);
+                    log(opt, "   Camera " + prevRec + " : " + (count-1) + "  (Last one: " + (trec ? trec.date : "<error>") + ")");
                     prevRec = rec.model;
                     count = 1;
+                    modelArray = [];
+                    modelArray.push(rec);
+                }
+                else {
+                    modelArray.push(rec);
                 }
             }
             if (res.length > 0 && count > 0) {
-                log(opt, "   Camera " + prevRec + " : " + count);
+                trec = findMostRecent(modelArray);
+                log(opt, "   Camera " + prevRec + " : " + count + "  (Last one: " + (trec ? trec.date : "<error>") + ")");
                 log(opt, "   --------------------------------");
             }
-            // now report the ext types
+            // now report the file extension types
             res.sort(function (a, b) {
                 if (a.ext > b.ext) {
                     return 1;
@@ -312,6 +320,25 @@
             }
         }
         //console.log(res);
+    }
+
+    findMostRecent = function(modelArray, opt) {
+        if (!modelArray) {
+            return null;
+        }
+        if (modelArray.length < 2) {
+            return modelArray[0];
+        }
+        modelArray.sort(function (a, b) {
+            if (a.date > b.date) {
+                return 1;
+            }
+            if (a.date < b.date) {
+                return -1;
+            }
+            return 0;
+        });
+        return modelArray[modelArray.length-1];
     }
 
     generateJson = function (res, opt) {
