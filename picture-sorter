@@ -27,6 +27,7 @@ if (!(src && (dst || reportOnly || metaFile))) {
   console.log("  -d - Destionation folder.");
   console.log("  -v - Verbose mode.");
   console.log("  -j - output the meta info (in json format) of all the pictures/videos under the source folder to a file");
+  console.log("  --dryrun - No actual operations will take place.");
   console.log("  --backup - copy files from Source to Destionation.");
   console.log("  --report - report picture count by camera models and extension names");
   console.log("");

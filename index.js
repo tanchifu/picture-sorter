@@ -10,8 +10,8 @@
     var ExifImage, fs, log, path, resultArray = [], exifFileCounter = 0, allFilesRead = false;
     // functions
     var copyOrMoveFile, pictureSorter, processFolder, processFileWithExif, processFile,
-        renameFileWithDateWOExt, convert2Digits, findNextGoodName, backupFile, reportTally,
-        generateJson, onResults, findMostRecent;
+        getNewFilenameWDateWOExt, convert2Digits, findNextGoodName, backupFile, reportTally,
+        generateJson, onResults, findMostRecent, isDryRun;
 
     fs = require('fs-extra');
     path = require('path');
@@ -19,6 +19,7 @@
 
     pictureSorter = function (src, dst, opt) {        
         log(opt, "Reading top folder: " + src);
+		isDryRun = opt['dryrun'];
         if (fs.statSync(src)) {
             processFolder(src, dst, opt);
             if (exifFileCounter === 0) {
@@ -107,7 +108,7 @@
                     dateArr = date.split(':');
                     if (dateArr.length > 5) {
                         folder = destFolder + "/" + dateArr[0] + "/" + dateArr[1];
-                        newFileName = renameFileWithDateWOExt(dateArr[0], dateArr[1], dateArr[2], dateArr[3], dateArr[4], dateArr[5], fileExt, false);
+                        newFileName = getNewFilenameWDateWOExt(dateArr[0], dateArr[1], dateArr[2], dateArr[3], dateArr[4], dateArr[5], fileExt, false);
                         copyOrMoveFile(fullSrcFileName, fileStats, folder, newFileName, fileExt, opt);
                         return;
                     } else {
@@ -133,7 +134,9 @@
         if (opt['m'] != null) {
             move = true;
         }
-        fs.mkdirsSync(destFolder);
+		if (!isDryRun) {
+			fs.mkdirsSync(destFolder);
+		}
 
         // check if the dest file name is a valid one
         var fullDestNameWOExt = findNextGoodName(fileStats["size"], newFileName, destFolder, 0, fileExt, opt);
@@ -146,10 +149,14 @@
             log(opt, "Moving file " + fullSrcFileName + " ---> " + fullDestName);
             //fs.copySync(fullSrcFileName, fullDestName);
             //return fs.removeSync(fullSrcFileName);
-            fs.renameSync(fullSrcFileName, fullDestName);
+			if (!isDryRun) {
+				fs.renameSync(fullSrcFileName, fullDestName);
+			}
         } else {
             log(opt, "Copying file " + fullSrcFileName + " ---> " + fullDestName);
-            fs.copySync(fullSrcFileName, fullDestName);
+			if (!isDryRun) {
+				fs.copySync(fullSrcFileName, fullDestName);
+			}
         }
     };
 
@@ -200,12 +207,12 @@
         seconds = convert2Digits(date.getSeconds());
 
         fullDestFolder = destFolder + "/" + year + "/" + month;
-        newFileName = renameFileWithDateWOExt(year, month, day, hours, minutes, seconds, fileExt, true);
+        newFileName = getNewFilenameWDateWOExt(year, month, day, hours, minutes, seconds, fileExt, true);
 
         copyOrMoveFile(fullSrcFileName, fileStats, fullDestFolder, newFileName, fileExt, opt);
     };
 
-    renameFileWithDateWOExt = function(yr, mo, da, hr, mi, se, fileExt, prependExt) {
+    getNewFilenameWDateWOExt = function(yr, mo, da, hr, mi, se, fileExt, prependExt) {
         return (prependExt ? (fileExt.substr(1) + NAME_SEPA) : "") + yr + NAME_SEPA + mo + NAME_SEPA + da + NAME_SEPA + hr + NAME_SEPA + mi + NAME_SEPA + se;
     }
 
@@ -219,7 +226,9 @@
         }
         fullDestName = destFolder + "/" + fullDestName + fileExt;
         log(opt, "Copying file " + currentFile + " ---> " + fullDestName);
-        fs.copySync(currentFile, fullDestName);
+		if (!isDryRun) {
+			fs.copySync(currentFile, fullDestName);
+		}
     }
     
     convert2Digits = function (aNum) {
