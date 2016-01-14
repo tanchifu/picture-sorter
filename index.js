@@ -9,13 +9,17 @@
     // vars
     var ExifImage, fs, log, path, resultArray = [], exifFileCounter = 0, allFilesRead = false;
     // functions
-    var copyOrMoveFile, pictureSorter, processFolder, processFileWithExif, processFile,
+    var stringStartsWith, copyOrMoveFile, pictureSorter, processFolder, processFileWithExif, processFile,
         getNewFilenameWDateWOExt, convert2Digits, findNextGoodName, backupFile, reportTally,
-        generateJson, onResults, findMostRecent, isDryRun;
+        generateJson, onResults, findMostRecent, isDryRun, filenameIsDate;
 
     fs = require('fs-extra');
     path = require('path');
     ExifImage = require('exif').ExifImage;
+
+	stringStartsWith = function (string, prefix) {
+		return string.slice(0, prefix.length) == prefix;
+	}
 
     pictureSorter = function (src, dst, opt) {        
         log(opt, "Reading top folder: " + src);
@@ -38,9 +42,9 @@
         //console.log("---results count: " + results.length);
         for (i = 0, len = files.length; i < len; i++) {
             file = files[i];
-            currentFile = src + "/" + file;
+            currentFile = src + path.sep + file;
             fileStats = fs.statSync(currentFile);
-            if (fileStats.isFile()) {
+            if (fileStats.isFile() && !stringStartsWith(file, ".")) {
                 //log(opt, "processing file: " + currentFile);
                 if (backup) {
                     backupFile(currentFile, file, fileStats, dst, opt);
@@ -54,7 +58,14 @@
                     }
                     //else if (ref && ref.length > 0 && ((ref in NON_JPG_PICTURE_EXT) || (ref in VIDEO_EXT))) {
                     else if (ref && ref.length > 0 && (NON_JPG_PICTURE_EXT.indexOf(ref) >= 0 || VIDEO_EXT.indexOf(ref) >= 0)) {
-                        processFile(currentFile, file, fileStats, fileExt, dst, opt);
+						// if the file name already contains year month date time, skip it
+						if (filenameIsDate(file)) {
+							log(opt, "keeping the same filename for " + currentFile);
+							useModifyDate(currentFile, file, fileStats, fileExt, dst, opt, true);
+						}
+						else {
+							useModifyDate(currentFile, file, fileStats, fileExt, dst, opt, false);
+						}
                     }
                     else {
                         log(opt, "Skipped file (cause: extension): " + file);
@@ -67,6 +78,10 @@
         }
     };
 
+	filenameIsDate = function(filename) {
+		return /^\d{8}[_\-]\d{6}[\.].+$/.test(filename);
+	}
+
     onResults = function (ra, opt) {
         if (opt['report']) {
             reportTally(resultArray, opt);
@@ -75,10 +90,6 @@
             generateJson(resultArray, opt);
         }
     }
-
-    processFile = function (fullSrcFileName, fileName, fileStats, fileExt, dst, opt) {
-        useModifyDate(fullSrcFileName, fileName, fileStats, fileExt, dst, opt);
-    };
 
     processFileWithExif = function (fullSrcFileName, srcFileName, fileStats, fileExt, destFolder, opt) {
         return new ExifImage({
@@ -107,23 +118,23 @@
                     date = imageDate.replace(/\ /g, ':');
                     dateArr = date.split(':');
                     if (dateArr.length > 5) {
-                        folder = destFolder + "/" + dateArr[0] + "/" + dateArr[1];
+                        folder = destFolder + path.sep + dateArr[0] + path.sep + dateArr[1];
                         newFileName = getNewFilenameWDateWOExt(dateArr[0], dateArr[1], dateArr[2], dateArr[3], dateArr[4], dateArr[5], fileExt, false);
                         copyOrMoveFile(fullSrcFileName, fileStats, folder, newFileName, fileExt, opt);
                         return;
                     } else {
                         //log(opt, "Error parsing date info. File: " + srcFileName);
-                        useModifyDate(fullSrcFileName, srcFileName, fileStats, fileExt, destFolder, opt);
+                        useModifyDate(fullSrcFileName, srcFileName, fileStats, fileExt, destFolder, opt, false);
                         return;
                     }
                 } else {
                     //log(opt, "Error getting date from Exif info. File: " + srcFileName);
-                    useModifyDate(fullSrcFileName, srcFileName, fileStats, fileExt, destFolder, opt);
+                    useModifyDate(fullSrcFileName, srcFileName, fileStats, fileExt, destFolder, opt, false);
                     return;
                 }
             } else {
                 //log(opt, "Error obtaining Exif info. File: " + err.message);
-                useModifyDate(fullSrcFileName, srcFileName, fileStats, fileExt, destFolder, opt);
+                useModifyDate(fullSrcFileName, srcFileName, fileStats, fileExt, destFolder, opt, false);
                 return;
             }
         });
@@ -144,7 +155,7 @@
             log(opt, "File already exists, skipped file: " + fullSrcFileName);
             return;
         }
-        var fullDestName = destFolder + "/" + fullDestNameWOExt + fileExt;
+        var fullDestName = destFolder + path.sep + fullDestNameWOExt + fileExt;
         if (move) {
             log(opt, "Moving file " + fullSrcFileName + " ---> " + fullDestName);
             //fs.copySync(fullSrcFileName, fullDestName);
@@ -162,7 +173,7 @@
 
     findNextGoodName = function(srcFileSize, fileName, destFolder, fileIndex, fileExt, opt) {
         var justFileName = fileName + (fileIndex == 0 ? "" : (FILE_INDEX_SEPA+fileIndex));
-        var fullDestName = destFolder + "/" + justFileName + fileExt;
+        var fullDestName = destFolder + path.sep + justFileName + fileExt;
         var destFileStats;
         try {
             destFileStats = fs.statSync(fullDestName);
@@ -189,25 +200,30 @@
         return justFileName;
     }
 
-    useModifyDate = function (fullSrcFileName, srcFileName, fileStats, fileExt, destFolder, opt) {
+    useModifyDate = function (fullSrcFileName, srcFileName, fileStats, fileExt, destFolder, opt, skipModDate) {
         //log(opt, "    useModifyDate: " + fullSrcFileName);
-        if (opt['report'] || opt['j']) {
-            filepath = fullSrcFileName.substring(0, fullSrcFileName.length - srcFileName.length);
-            var obj = {name:srcFileName, path:filepath, ext:fileExt.toUpperCase(), make:UNKNOWN, model:UNKNOWN, size:fileStats["size"], date:fileStats.mtime};
-            resultArray.push(obj);
-            return;
-        }
-        var date, day, newFileName, fullDestFolder, hours, minutes, seconds, month, year;
-        date = new Date(fileStats.mtime);
-        year = "" + (date.getFullYear());
-        month = convert2Digits(date.getMonth() + 1);
-        day = convert2Digits(date.getDate());
-        hours = convert2Digits(date.getHours());
-        minutes = convert2Digits(date.getMinutes());
-        seconds = convert2Digits(date.getSeconds());
+		if (opt['report'] || opt['j']) {
+			filepath = fullSrcFileName.substring(0, fullSrcFileName.length - srcFileName.length);
+			var obj = {name:srcFileName, path:filepath, ext:fileExt.toUpperCase(), make:UNKNOWN, model:UNKNOWN, size:fileStats["size"], date:fileStats.mtime};
+			resultArray.push(obj);
+			return;
+		}
+		var date, day, hours, minutes, seconds, month, year, fullDestFolder, newFileName;
+		date = new Date(fileStats.mtime);
+		year = "" + (date.getFullYear());
+		month = convert2Digits(date.getMonth() + 1);
+		day = convert2Digits(date.getDate());
+		hours = convert2Digits(date.getHours());
+		minutes = convert2Digits(date.getMinutes());
+		seconds = convert2Digits(date.getSeconds());
+		if (skipModDate) {
+			newFileName = srcFileName.substring(0, srcFileName.length - fileExt.length);
+		}
+		else {
+			newFileName = getNewFilenameWDateWOExt(year, month, day, hours, minutes, seconds, fileExt, true);
+		}
 
-        fullDestFolder = destFolder + "/" + year + "/" + month;
-        newFileName = getNewFilenameWDateWOExt(year, month, day, hours, minutes, seconds, fileExt, true);
+		fullDestFolder = destFolder + path.sep + year + path.sep + month;
 
         copyOrMoveFile(fullSrcFileName, fileStats, fullDestFolder, newFileName, fileExt, opt);
     };
@@ -224,7 +240,7 @@
             log(opt, "File already exists, skipped file: " + currentFile);
             return void 0;
         }
-        fullDestName = destFolder + "/" + fullDestName + fileExt;
+        fullDestName = destFolder + path.sep + fullDestName + fileExt;
         log(opt, "Copying file " + currentFile + " ---> " + fullDestName);
 		if (!isDryRun) {
 			fs.copySync(currentFile, fullDestName);
